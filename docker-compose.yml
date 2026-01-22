@@ -6,7 +6,7 @@ services:
     container_name: youtube-subtitle
     restart: unless-stopped
     environment:
-      - VIRTUAL_HOST=your-domain.com
+      - VIRTUAL_HOST=${VIRTUAL_HOST}
       - VIRTUAL_PORT=8000
     networks:
       - nginx-proxy
