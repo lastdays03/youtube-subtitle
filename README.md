@@ -163,6 +163,78 @@ fetch('http://localhost:8000/subtitle/dQw4w9WgXcQ')
 - **메모리 사용량:** ~50MB (매우 가벼움)
 - **동시 처리:** uvicorn의 비동기 처리로 다중 요청 지원
 
+## 배포 (Deployment)
+
+### GitHub Secrets 설정
+
+GitHub 저장소 설정에서 다음 Secrets를 등록하세요:
+
+| Secret 이름 | 설명 | 예시 |
+|------------|------|------|
+| `OCI_HOST` | OCI 서버 IP 또는 도메인 | `123.45.67.89` |
+| `OCI_USER` | SSH 사용자명 | `ubuntu` 또는 `opc` |
+| `OCI_SSH_KEY` | SSH 개인키 전체 내용 | `-----BEGIN RSA PRIVATE KEY-----...` |
+| `DEPLOY_PATH` | 서버의 프로젝트 경로 | `/home/ubuntu/youtube-subtitle` |
+
+### 서버 초기 설정
+
+OCI 서버에서 최초 1회만 실행:
+
+```bash
+# 프로젝트 클론
+git clone https://github.com/your-username/youtube-subtitle.git
+cd youtube-subtitle
+
+# nginx-proxy 네트워크 생성 (없는 경우)
+docker network create nginx-proxy
+
+# docker-compose.yml의 VIRTUAL_HOST 수정
+# your-domain.com을 실제 도메인으로 변경
+
+# 첫 배포
+docker-compose up -d
+```
+
+### 배포 프로세스
+
+로컬에서 태그 생성 및 푸시:
+
+```bash
+# 버전 태그 생성
+git tag v1.0.0
+
+# 태그 푸시 (자동 배포 트리거)
+git push origin v1.0.0
+```
+
+GitHub Actions가 자동으로:
+1. OCI 서버에 SSH 접속
+2. 최신 태그로 체크아웃
+3. Docker 이미지 빌드
+4. 컨테이너 재시작
+5. 배포 확인
+
+### 배포 확인
+
+```bash
+# 서버에서 확인
+docker ps
+docker logs youtube-subtitle
+curl http://localhost:8000/health
+```
+
+### 롤백
+
+이전 버전으로 롤백이 필요한 경우:
+
+```bash
+# 서버에서 실행
+cd /path/to/youtube-subtitle
+git checkout v1.0.0  # 이전 태그
+docker-compose down
+docker-compose up -d --build
+```
+
 ## 라이선스
 
 MIT License
