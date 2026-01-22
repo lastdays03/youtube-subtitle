@@ -47,7 +47,9 @@ def get_video_subtitle(video_id: str):
             detail=f"Video not found or unavailable: {video_id}"
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
-            detail="Internal server error"
+            detail=f"Internal server error: {str(e)}"
         )
