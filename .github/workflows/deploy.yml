@@ -34,17 +34,26 @@ jobs:
             # For now, we assume .env is handled manually or we should inject it here?
             # The previous conversation set up .env locally. Ideally secrets should populate .env
             echo "VIRTUAL_HOST=${{ secrets.VIRTUAL_HOST }}" > .env
+            echo "YOUTUBE_PROXY_URL=${{ secrets.YOUTUBE_PROXY_URL }}" >> .env
+            echo "YOUTUBE_COOKIES_FILE=/app/cookies.txt" >> .env
             
-            # Restart services
-            # Try docker compose (v2) first
-            if command -v docker-compose &> /dev/null; then
-                DC_CMD="docker-compose"
+            # Create cookies.txt from secret if it exists
+            if [ -n "${{ secrets.YOUTUBE_COOKIES_CONTENT }}" ]; then
+              echo "${{ secrets.YOUTUBE_COOKIES_CONTENT }}" > cookies.txt
             else
-                DC_CMD="docker compose"
+              touch cookies.txt
+            fi
+
+            # Check if docker-compose exists
+            if command -v docker-compose &> /dev/null; then
+              COMPOSE_CMD="docker-compose"
+            else
+              COMPOSE_CMD="docker compose"
             fi
             
-            $DC_CMD down
-            $DC_CMD up -d --build
+            $COMPOSE_CMD down
+            $COMPOSE_CMD build
+            $COMPOSE_CMD up -d
 
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.0
