@@ -17,12 +17,34 @@ jobs:
           username: ${{ secrets.OCI_USER }}
           key: ${{ secrets.OCI_SSH_KEY }}
           script: |
+            # Create directory if not exists
+            if [ ! -d "${{ secrets.DEPLOY_PATH }}" ]; then
+              mkdir -p ${{ secrets.DEPLOY_PATH }}
+              git clone https://github.com/${{ github.repository }} ${{ secrets.DEPLOY_PATH }}
+            fi
+            
             cd ${{ secrets.DEPLOY_PATH }}
-            git fetch --tags
+            
+            # Fetch latest code
+            git fetch --all --tags
             git checkout ${{ github.ref_name }}
-            docker-compose down
-            docker-compose build --no-cache
-            docker-compose up -d
+            git pull origin ${{ github.ref_name }}
+            
+            # Create .env file from secrets if needed, or assume it's there. 
+            # For now, we assume .env is handled manually or we should inject it here?
+            # The previous conversation set up .env locally. Ideally secrets should populate .env
+            echo "VIRTUAL_HOST=${{ secrets.VIRTUAL_HOST }}" > .env
+            
+            # Restart services
+            # Try docker compose (v2) first
+            if command -v docker-compose &> /dev/null; then
+                DC_CMD="docker-compose"
+            else
+                DC_CMD="docker compose"
+            fi
+            
+            $DC_CMD down
+            $DC_CMD up -d --build
 
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.0
@@ -32,5 +54,12 @@ jobs:
           key: ${{ secrets.OCI_SSH_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
+            
+            if command -v docker-compose &> /dev/null; then
+                DC_CMD="docker-compose"
+            else
+                DC_CMD="docker compose"
+            fi
+            
             docker ps | grep youtube-subtitle
             docker logs youtube-subtitle --tail 20
