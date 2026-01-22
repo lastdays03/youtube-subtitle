@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  youtube-subtitle:
+    build: .
+    container_name: youtube-subtitle
+    restart: unless-stopped
+    environment:
+      - VIRTUAL_HOST=your-domain.com
+      - VIRTUAL_PORT=8000
+    networks:
+      - nginx-proxy
+
+networks:
+  nginx-proxy:
+    external: true
