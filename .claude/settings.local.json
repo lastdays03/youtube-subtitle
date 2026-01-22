@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:executing-plans)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
